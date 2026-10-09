@@ -1,9 +1,14 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=75"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "fluxy_light"
+name = "fluxy-light"
 version = "0.1.0"
-description = "A real-time messaging web application built with Python"
+description = "Real-time messaging application"
 requires-python = ">=3.14"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["fluxy_light*"]
+namespaces = false
