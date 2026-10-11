@@ -1,8 +1,8 @@
 from uuid import UUID, uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 from re import fullmatch
 
-# ----------------------------
+# -------------------------------------
 from fluxy_light.models.role import Role
 
 
@@ -21,7 +21,7 @@ class User:
         self.name = username
         self.role = role
         self.id: UUID = uuid4()
-        self.created_at: datetime = datetime.now()
+        self.created_at: datetime = datetime.now(timezone.utc)
 
     @classmethod
     def set_default_user(cls: User) -> str:

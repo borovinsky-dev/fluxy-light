@@ -1,9 +1,6 @@
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from fluxy_light.models.user import User
-from fluxy_light.models.room import Room
-
 
 class Message:
     def __init__(
