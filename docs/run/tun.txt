@@ -1,0 +1,1 @@
+python -m fluxy_light.main_test - запуск из корня

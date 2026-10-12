@@ -2,7 +2,6 @@ from uuid import UUID, uuid4
 from datetime import datetime, timezone
 from re import fullmatch
 
-# -------------------------------------
 from fluxy_light.models.role import Role
 
 
@@ -13,12 +12,12 @@ class User:
 
     def __init__(self, username: str | None = None, role: Role = Role.MEMBER) -> None:
         if username == None:
-            name = self.set_default_user()
-            name_after_validate = self.validate_username(name)
+            username = self.set_default_user()
+            name_after_validate = self.validate_username(username)
             username = name_after_validate
         else:
             self.validate_username(username)
-        self.name = username
+        self.username = username
         self.role = role
         self.id: UUID = uuid4()
         self.created_at: datetime = datetime.now(timezone.utc)
@@ -48,11 +47,24 @@ class User:
             raise ValueError("Username содержит недопустимые символы")
         return name
 
+    @classmethod
+    def from_db(
+        cls,
+        user_id: UUID,
+        username: str,
+        role: Role,
+        created_at: datetime,
+    ) -> User:
+        object_user = cls(username=username, role=role)
+        object_user.id = user_id
+        object_user.created_at = created_at
+        return object_user
+
     def __str__(self) -> str:
-        return f"Объект класса {self.__class__.__name__}: ({self.id}, {self.name}, {self.created_at})"
+        return f"Объект класса {self.__class__.__name__}: ({self.id}, {self.username}, {self.created_at})"
 
     def __repr__(self) -> str:
-        return f"Объект класса {self.__class__.__name__}: ({self.id!r}, {self.name!r}, {self.created_at!r})"
+        return f"Объект класса {self.__class__.__name__}: ({self.id!r}, {self.username!r}, {self.created_at!r})"
 
 
 def main() -> None:

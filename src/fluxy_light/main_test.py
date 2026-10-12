@@ -31,8 +31,20 @@ def main():
     )
 
     database = Database()
+    database.initialize()
+
     connection = database.get_connection()
-    print(connection.execute("SELECT sqlite_version()").fetchone())
+
+    tables = connection.execute("""
+    SELECT name
+    FROM sqlite_master
+    WHERE type = 'table'
+    """).fetchall()
+    print(tables)
+    columns = connection.execute("PRAGMA table_info(users)").fetchall()
+    for col in columns:
+        print(col)
+
     connection.close()
 
 
