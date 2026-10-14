@@ -39,3 +39,27 @@ class Message:
             raise TypeError("Месседж должен быть текстом")
 
         return (sender_id, conversation_id, room_id, text)
+
+    @classmethod
+    def from_db(
+        cls,
+        id: str,
+        created_at: str,
+        sender_id: str,
+        text: str,
+        conversation_id: str | None = None,
+        room_id: str | None = None,
+    ) -> Message:
+        message_object = cls(
+            sender_id=UUID(sender_id),
+            text=text,
+            conversation_id=(
+                UUID(conversation_id) if conversation_id is not None else None
+            ),
+            room_id=UUID(room_id) if room_id is not None else None,
+        )
+
+        message_object.id = UUID(id)
+        message_object.created_at = datetime.fromisoformat(created_at)
+
+        return message_object

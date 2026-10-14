@@ -4,7 +4,7 @@ from uuid import UUID
 
 import pytest
 
-from src.models.user import User
+from fluxy_light.models.user import User
 
 
 class TestUser:

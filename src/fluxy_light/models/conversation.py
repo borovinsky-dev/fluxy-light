@@ -23,6 +23,18 @@ class Conversation:
             return object.__getattribute__(self, "__dict__")
         return object.__getattribute__(self, name)
 
+    @classmethod
+    def from_db(
+        cls, id: str, participant_1_id: str, participant_2_id: str, created_at: str
+    ) -> Conversation:
+        conv_object_id = UUID(id)
+        tuple_object_ids = (UUID(participant_1_id), UUID(participant_2_id))
+        created_at_object = datetime.fromisoformat(created_at)
+        conv_object = cls(tuple_object_ids)
+        conv_object.id = conv_object_id
+        conv_object.created_at = created_at_object
+        return conv_object
+
     # валидация атрибута ids
     @staticmethod
     def validate_ids(ids: tuple[UUID, UUID]) -> tuple[UUID, UUID]:

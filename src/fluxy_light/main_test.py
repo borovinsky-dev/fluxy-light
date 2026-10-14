@@ -2,7 +2,7 @@ from fluxy_light.models.conversation import Conversation
 from fluxy_light.models.user import User
 from fluxy_light.models.message import Message
 from fluxy_light.models.room import Room
-from fluxy_light.storage.database import Database
+from fluxy_light.database.database import Database
 
 
 def main():
