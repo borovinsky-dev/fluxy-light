@@ -1,46 +1,59 @@
-from fluxy_light.database.database import Database
-from fluxy_light.models.room import Room
 from contextlib import closing
+from sqlite3 import IntegrityError
 from uuid import UUID
+
+from fluxy_light.database.database import Database
+from fluxy_light.exceptions.repository import (
+    RepositoryIntegrityError,
+    UserAlreadyExistsError,
+)
+from fluxy_light.models.room import Room
 
 
 class RoomRepo:
-
-    def __init__(self, database: Database):
+    def __init__(self, database: Database) -> None:
         if not isinstance(database, Database):
-            raise TypeError("Database должен быть типом Database")
+            raise TypeError("database должен быть объектом Database")
+
+        self.database = database
 
     def save_room(self, room: Room) -> None:
         if not isinstance(room, Room):
-            raise TypeError("Room должен быть объектом класса Room")
-        with closing(self.database.get_connection()) as connection:
-            with connection:
-                connection.execute(
-                    """
-                INSERT INTO rooms (
-                    id,
-                    name,
-                    creator_id,
-                    is_moderated,
-                    created_at
-                )
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                    (
-                        str(room.id),
-                        room.name,
-                        str(room.creator_id),
-                        int(room.is_moderated),
-                        room.created_at.isoformat(),
-                    ),
-                )
+            raise TypeError("room должен быть объектом Room")
 
-    def get_by_id(self, room_id: UUID) -> Room | None:
+        try:
+            with closing(self.database.get_connection()) as connection:
+                with connection:
+                    connection.execute(
+                        """
+                        INSERT INTO rooms (
+                            id,
+                            name,
+                            creator_id,
+                            is_moderated,
+                            created_at
+                        )
+                        VALUES (?, ?, ?, ?, ?)
+                        """,
+                        (
+                            str(room.id),
+                            room.name,
+                            str(room.creator_id),
+                            int(room.is_moderated),
+                            room.created_at.isoformat(),
+                        ),
+                    )
+        except IntegrityError as error:
+            raise RepositoryIntegrityError(
+                "Не удалось сохранить комнату: нарушено ограничение БД"
+            ) from error
+
+    def get_room_by_id(self, room_id: UUID) -> Room | None:
         if not isinstance(room_id, UUID):
             raise TypeError("room_id должен быть UUID")
 
         with closing(self.database.get_connection()) as connection:
-            result = connection.execute(
+            row = connection.execute(
                 """
                 SELECT id, name, creator_id, is_moderated, created_at
                 FROM rooms
@@ -49,15 +62,15 @@ class RoomRepo:
                 (str(room_id),),
             ).fetchone()
 
-        if result is None:
+        if row is None:
             return None
 
         return Room.from_db(
-            id=result[0],
-            name=result[1],
-            creator_id=result[2],
-            is_moderated=result[3],
-            created_at=result[4],
+            id=row[0],
+            name=row[1],
+            creator_id=row[2],
+            is_moderated=row[3],
+            created_at=row[4],
         )
 
     def exists_by_id(self, room_id: UUID) -> bool:
@@ -65,23 +78,19 @@ class RoomRepo:
             raise TypeError("room_id должен быть UUID")
 
         with closing(self.database.get_connection()) as connection:
-            result = connection.execute(
-                """
-                SELECT 1
-                FROM rooms
-                WHERE id = ?
-                """,
+            row = connection.execute(
+                "SELECT 1 FROM rooms WHERE id = ?",
                 (str(room_id),),
             ).fetchone()
 
-        return result is not None
+        return row is not None
 
     def get_by_creator_id(self, creator_id: UUID) -> list[Room]:
         if not isinstance(creator_id, UUID):
             raise TypeError("creator_id должен быть UUID")
 
         with closing(self.database.get_connection()) as connection:
-            results = connection.execute(
+            rows = connection.execute(
                 """
                 SELECT id, name, creator_id, is_moderated, created_at
                 FROM rooms
@@ -99,5 +108,5 @@ class RoomRepo:
                 is_moderated=row[3],
                 created_at=row[4],
             )
-            for row in results
+            for row in rows
         ]

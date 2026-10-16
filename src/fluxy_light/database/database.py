@@ -24,6 +24,9 @@ class Database:
                     CREATE TABLE IF NOT EXISTS users (
                         id TEXT NOT NULL PRIMARY KEY,
                         username TEXT NOT NULL UNIQUE,
+                        email TEXT NOT NULL UNIQUE,
+                        password_salt BLOB NOT NULL,
+                        password_hash BLOB NOT NULL,
                         role TEXT NOT NULL
                             CHECK (role IN ('admin', 'moderator', 'member')),
                         created_at TEXT NOT NULL

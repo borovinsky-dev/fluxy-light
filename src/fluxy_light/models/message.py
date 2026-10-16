@@ -1,44 +1,61 @@
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
+from fluxy_light.exceptions.validation import InvalidMessageError
+
 
 class Message:
+    """Класс для создания сообщений."""
+
     def __init__(
         self,
         sender_id: UUID,
         text: str,
         conversation_id: UUID | None = None,
         room_id: UUID | None = None,
-    ):
-        self.id = uuid4()
-        self.created_at = datetime.now(timezone.utc)
-        self.sender_id, self.conversation_id, self.room_id, self.text = (
-            self.validate_attributes(sender_id, conversation_id, room_id, text)
+    ) -> None:
+        (
+            self.sender_id,
+            self.conversation_id,
+            self.room_id,
+            self.text,
+        ) = self.validate_attributes(
+            sender_id,
+            conversation_id,
+            room_id,
+            text,
         )
 
-    # валидация проходит с распоковкой кортежа в будущем
+        self.id: UUID = uuid4()
+        self.created_at: datetime = datetime.now(timezone.utc)
+
     @staticmethod
     def validate_attributes(
-        sender_id: UUID | None,
+        sender_id: UUID,
         conversation_id: UUID | None,
         room_id: UUID | None,
         text: str,
     ) -> tuple[UUID, UUID | None, UUID | None, str]:
-        """Поле sender_id будет обязательное, но поля conversation_id и room_id не будут обязательными"""
-        if (
-            (type(sender_id) != UUID)
-            or (type(conversation_id) != UUID and conversation_id is not None)
-            or (type(room_id) != UUID and room_id is not None)
-        ):
-            raise TypeError("Недопустимые типы ID")
+        """Проверяет атрибуты сообщения."""
+
+        if not isinstance(sender_id, UUID):
+            raise InvalidMessageError("sender_id должен быть объектом UUID")
+
+        if conversation_id is not None and not isinstance(conversation_id, UUID):
+            raise InvalidMessageError("conversation_id должен быть UUID или None")
+
+        if room_id is not None and not isinstance(room_id, UUID):
+            raise InvalidMessageError("room_id должен быть UUID или None")
+
         if (conversation_id is None) == (room_id is None):
-            raise ValueError(
+            raise InvalidMessageError(
                 "Сообщение должно принадлежать либо переписке, либо комнате"
             )
-        if type(text) != str:
-            raise TypeError("Месседж должен быть текстом")
 
-        return (sender_id, conversation_id, room_id, text)
+        if not isinstance(text, str):
+            raise InvalidMessageError("Текст сообщения должен быть строкой")
+
+        return sender_id, conversation_id, room_id, text
 
     @classmethod
     def from_db(
@@ -49,7 +66,7 @@ class Message:
         text: str,
         conversation_id: str | None = None,
         room_id: str | None = None,
-    ) -> Message:
+    ) -> "Message":
         message_object = cls(
             sender_id=UUID(sender_id),
             text=text,

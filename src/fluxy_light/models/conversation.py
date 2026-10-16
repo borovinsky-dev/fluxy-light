@@ -2,51 +2,69 @@ from uuid import UUID, uuid4
 from datetime import datetime, timezone
 from typing import Any
 
+from fluxy_light.exceptions.validation import InvalidConversationError
+
 
 class Conversation:
-    """Класс отвечает за сущность создания отдельной переписки"""
+    """Класс отвечает за сущность создания отдельной переписки."""
 
     def __init__(self, ids: tuple[UUID, UUID]) -> None:
-        # уникальный id переписки
+        self.ids = self.validate_ids(ids)
         self.id = uuid4()
         self.created_at = datetime.now(timezone.utc)
-        self.ids = self.validate_ids(ids)
 
     def __str__(self) -> str:
-        return f"Объект класса {self.__class__.__name__}: ({self.id}, {self.created_at}, {self.ids})"
+        return (
+            f"Объект класса {self.__class__.__name__}: "
+            f"({self.id}, {self.created_at}, {self.ids})"
+        )
 
     def __repr__(self) -> str:
-        return f"Объект класса {self.__class__.__name__}: ({self.id!r}, {self.created_at!r}, {self.ids!r})"
+        return (
+            f"Объект класса {self.__class__.__name__}: "
+            f"({self.id!r}, {self.created_at!r}, {self.ids!r})"
+        )
 
-    def __getattribute__(self, name) -> Any:
+    def __getattribute__(self, name: str) -> Any:
         if name == "attributes":
             return object.__getattribute__(self, "__dict__")
         return object.__getattribute__(self, name)
 
     @classmethod
     def from_db(
-        cls, id: str, participant_1_id: str, participant_2_id: str, created_at: str
-    ) -> Conversation:
-        conv_object_id = UUID(id)
-        tuple_object_ids = (UUID(participant_1_id), UUID(participant_2_id))
-        created_at_object = datetime.fromisoformat(created_at)
+        cls,
+        id: str,
+        participant_1_id: str,
+        participant_2_id: str,
+        created_at: str,
+    ) -> "Conversation":
+        tuple_object_ids = (
+            UUID(participant_1_id),
+            UUID(participant_2_id),
+        )
+
         conv_object = cls(tuple_object_ids)
-        conv_object.id = conv_object_id
-        conv_object.created_at = created_at_object
+        conv_object.id = UUID(id)
+        conv_object.created_at = datetime.fromisoformat(created_at)
+
         return conv_object
 
-    # валидация атрибута ids
     @staticmethod
     def validate_ids(ids: tuple[UUID, UUID]) -> tuple[UUID, UUID]:
         if not isinstance(ids, tuple):
-            raise TypeError("Аргумент должен быть кортежем (tuple)")
+            raise InvalidConversationError("Аргумент должен быть кортежем (tuple)")
+
         if len(ids) != 2:
-            raise ValueError("Кортеж должен содержать только 2 элемента")
+            raise InvalidConversationError("Кортеж должен содержать ровно 2 элемента")
+
         if any(not isinstance(element, UUID) for element in ids):
-            raise TypeError("Все элементы кортежа должны быть объектами UUID")
+            raise InvalidConversationError(
+                "Все элементы кортежа должны быть объектами UUID"
+            )
 
         if ids[0] == ids[1]:
-            raise ValueError("Участники переписки должны быть разными")
+            raise InvalidConversationError("Участники переписки должны быть разными")
+
         return ids
 
 
@@ -58,5 +76,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    print(f"Прямой запус модуля {__name__}")
+    print(f"Прямой запуск модуля {__name__}")
     main()
