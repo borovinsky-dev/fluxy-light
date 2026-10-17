@@ -34,6 +34,21 @@ class Database:
                 """)
 
                 connection.execute("""
+                CREATE TABLE IF NOT EXISTS room_members (
+                    room_id TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
+                    role TEXT NOT NULL
+                        CHECK (role IN ('owner', 'moderator', 'member')),
+                    joined_at TEXT NOT NULL,
+
+                    PRIMARY KEY (room_id, user_id),
+
+                    FOREIGN KEY (room_id) REFERENCES rooms(id),
+                    FOREIGN KEY (user_id) REFERENCES users(id)
+                    )
+                """)
+
+                connection.execute("""
                     CREATE TABLE IF NOT EXISTS conversations (
                         id TEXT NOT NULL PRIMARY KEY,
                         participant_1_id TEXT NOT NULL,

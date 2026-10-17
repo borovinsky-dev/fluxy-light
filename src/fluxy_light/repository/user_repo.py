@@ -82,6 +82,27 @@ class UserRepo:
                 created_at=datetime.fromisoformat(result[4]),
             )
 
+    def get_user_by_email(self, email: str) -> User:
+        with closing(self.database.get_connection()) as connection:
+            with connection:
+                result = connection.execute(
+                    """
+                SELECT id, username, email, role, created_at
+                FROM users
+                WHERE email = ?
+                """,
+                    (email,),
+                ).fetchone()
+            if result is None:
+                return None
+            return User.from_db(
+                user_id=UUID(result[0]),
+                username=result[1],
+                email=result[2],
+                role=Role(result[3]),
+                created_at=datetime.fromisoformat(result[4]),
+            )
+
     def get_all_users(self) -> list[User]:
         with closing(self.database.get_connection()) as connection:
             with connection:
@@ -179,3 +200,33 @@ class UserRepo:
                     """ DELETE FROM users WHERE username = ? """,
                     (username,),
                 )
+
+    def get_auth_by_email(self, email: str) -> tuple[User, bytes, bytes] | None:
+        with closing(self.database.get_connection()) as connection:
+            with connection:
+                result = connection.execute(
+                    """
+                    SELECT
+                        id, username, email, role, created_at,
+                        password_salt, password_hash
+                    FROM users
+                    WHERE email = ?
+                    """,
+                    (email,),
+                ).fetchone()
+
+            if result is None:
+                return None
+
+            user = User.from_db(
+                user_id=UUID(result[0]),
+                username=result[1],
+                email=result[2],
+                role=Role(result[3]),
+                created_at=datetime.fromisoformat(result[4]),
+            )
+
+            password_salt = result[5]
+            password_hash = result[6]
+
+        return user, password_salt, password_hash

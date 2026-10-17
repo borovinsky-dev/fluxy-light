@@ -7,3 +7,7 @@ class ServiceError(FluxyLightError):
 
 class UserNotFoundError(ServiceError):
     """Пользователь не найден."""
+
+
+class AuthenticationError(ServiceError):
+    """Ошибка аутентификации пользователя."""

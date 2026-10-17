@@ -11,3 +11,7 @@ class UserAlreadyExistsError(RepositoryError):
 
 class RepositoryIntegrityError(RepositoryError):
     """Ошибка при нарушении ограничения базы данных."""
+
+
+class RoomMemberAlreadyExistsError(Exception):
+    pass
